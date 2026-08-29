@@ -9,9 +9,11 @@
 A Home Assistant Lovelace card that displays a single day's timetable and
 substitutions, sourced from the
 [`stundenplan`](https://github.com/fion-private/ha-stundenplan) integration's
-`sensor.<class>_tagesplan` entity. Cancelled and changed lessons are
-highlighted, the current lesson is tracked live, and split/parallel course
-groups are grouped under one time slot.
+`sensor.<class>_day_plan_today` / `_day_plan_tomorrow` entity - the card
+always shows exactly one of the two days, whichever entity you point it at.
+Cancelled and changed lessons are highlighted, the current lesson is
+tracked live, and split/parallel course groups are grouped under one time
+slot.
 
 This card is the frontend companion to the **Stundenplan** integration -
 install that first, it does the actual data fetching.
@@ -47,14 +49,14 @@ YAML:
 
 ```yaml
 type: custom:stundenplan-card
-entity: sensor.stundenplan_8a_tagesplan # required: the day-plan entity
+entity: sensor.stundenplan_8a_day_plan_tomorrow # required: the day-plan entity (today or tomorrow)
 title: Stundenplan # optional, overrides the default title (the entity's name)
 compact: false # optional, defaults to false
 ```
 
 | Option    | Required | Default             | Description                                                                                        |
 | --------- | -------- | -------------------- | ---------------------------------------------------------------------------------------------------- |
-| `entity`  | yes      | –                     | The `sensor.<class>_tagesplan` entity from the Stundenplan integration.                              |
+| `entity`  | yes      | –                     | A `sensor.<class>_day_plan_today` or `sensor.<class>_day_plan_tomorrow` entity from the Stundenplan integration. |
 | `title`   | no       | entity's friendly name | Overrides the header title.                                                                          |
 | `compact` | no       | `false`               | Hides teacher/room and uses tighter spacing - useful for smaller dashboard columns.                  |
 
@@ -74,7 +76,7 @@ compact: false # optional, defaults to false
   are dimmed. The card re-evaluates this every minute while visible. Before
   or after the target day, no lesson is highlighted or dimmed.
 - **Empty state**: a compact placeholder is shown when the entity reports no
-  plan for tomorrow (weekend, holidays, or the source not published yet).
+  plan for that day (weekend, holidays, or the source not published yet).
 - **Compact mode**: `compact: true` drops the teacher/room line and tightens
   row spacing, for narrower dashboard columns.
 

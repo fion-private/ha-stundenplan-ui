@@ -29,23 +29,23 @@ export function isSameLocalDate(a: Date, b: Date): boolean {
 /**
  * Determines whether a lesson is in the past, currently ongoing, or still
  * upcoming, relative to `now`. Live highlighting only applies when the
- * plan's target date is today; otherwise "neutral" is returned (e.g. in the
- * evening before, when the entity already shows tomorrow's plan).
+ * plan's target date is today; otherwise "neutral" is returned (e.g. the
+ * card is configured to show tomorrow's plan).
  */
 export function getLessonTiming(
-  lesson: Pick<StundenplanLesson, "beginn" | "ende">,
-  zielDatum: string | undefined,
+  lesson: Pick<StundenplanLesson, "start" | "end">,
+  targetDate: string | undefined,
   now: Date
 ): LessonTiming {
-  if (!zielDatum) {
+  if (!targetDate) {
     return "neutral";
   }
-  const zielDate = new Date(`${zielDatum}T00:00:00`);
-  if (Number.isNaN(zielDate.getTime()) || !isSameLocalDate(zielDate, now)) {
+  const target = new Date(`${targetDate}T00:00:00`);
+  if (Number.isNaN(target.getTime()) || !isSameLocalDate(target, now)) {
     return "neutral";
   }
-  const start = parseHms(zielDatum, lesson.beginn);
-  const end = parseHms(zielDatum, lesson.ende);
+  const start = parseHms(targetDate, lesson.start);
+  const end = parseHms(targetDate, lesson.end);
   if (!start || !end) {
     return "neutral";
   }
@@ -59,45 +59,44 @@ export function getLessonTiming(
 }
 
 export interface LessonGroup {
-  stunde: number;
-  beginn: string;
-  ende: string;
+  period: number;
+  start: string;
+  end: string;
   lessons: StundenplanLesson[];
   timing: LessonTiming;
 }
 
 /**
- * Groups lessons by period number (`stunde`), ascending. Multiple lessons
- * with the same period number (parallel/split course groups, see the
- * integration's `Ku2` handling) end up in the same group and share one
- * timeline row.
+ * Groups lessons by period number, ascending. Multiple lessons with the
+ * same period number (parallel/split course groups, see the integration's
+ * `course` field) end up in the same group and share one timeline row.
  */
 export function groupLessonsByPeriod(
   lessons: StundenplanLesson[],
-  zielDatum: string | undefined,
+  targetDate: string | undefined,
   now: Date
 ): LessonGroup[] {
   const byPeriod = new Map<number, StundenplanLesson[]>();
   for (const lesson of lessons) {
-    const existing = byPeriod.get(lesson.stunde);
+    const existing = byPeriod.get(lesson.period);
     if (existing) {
       existing.push(lesson);
     } else {
-      byPeriod.set(lesson.stunde, [lesson]);
+      byPeriod.set(lesson.period, [lesson]);
     }
   }
 
   return Array.from(byPeriod.entries())
     .sort(([periodA], [periodB]) => periodA - periodB)
-    .map(([stunde, group]) => {
-      const sorted = [...group].sort((a, b) => a.beginn.localeCompare(b.beginn));
+    .map(([period, group]) => {
+      const sorted = [...group].sort((a, b) => a.start.localeCompare(b.start));
       const representative = sorted[0];
       return {
-        stunde,
-        beginn: representative.beginn,
-        ende: representative.ende,
+        period,
+        start: representative.start,
+        end: representative.end,
         lessons: sorted,
-        timing: getLessonTiming(representative, zielDatum, now),
+        timing: getLessonTiming(representative, targetDate, now),
       };
     });
 }

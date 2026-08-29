@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output (published via GitHub Releases, see .github/workflows/release.yml)
+dist/
+
+# Test / coverage
+coverage/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+
+# Logs
+npm-debug.log*

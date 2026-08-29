@@ -14,10 +14,12 @@ import type {
 } from "./types";
 
 /**
- * Lovelace card for the "Stundenplan" integration. Reads the `stunden`
- * attribute of a `sensor.<class>_tagesplan` entity and renders it as a
- * single-day timeline, with live "past / current / upcoming" highlighting
- * when the plan's target date is today.
+ * Lovelace card for the "Stundenplan" integration. Reads the `lessons`
+ * attribute of a single `sensor.<class>_day_plan_today` /
+ * `_day_plan_tomorrow` entity and renders it as a single-day timeline, with
+ * live "past / current / upcoming" highlighting when the plan's target
+ * date is today. The card always shows exactly one of the two days - which
+ * one is picked via the `entity` config option.
  */
 @customElement(CARD_TAG)
 export class StundenplanCard extends LitElement {
@@ -33,16 +35,16 @@ export class StundenplanCard extends LitElement {
   }
 
   public static getStubConfig(hass: HomeAssistant): StundenplanCardConfig {
-    // Entities created by the "Stundenplan" integration's day-plan sensor
-    // end in "_tagesplan" (translation_key "tagesplan") and expose a
-    // `stunden` attribute - used here purely as a heuristic to pre-fill a
-    // sensible default when the card is added via the UI picker.
+    // Day-plan entities created by the "Stundenplan" integration expose a
+    // `lessons` attribute - used here purely as a heuristic to pre-fill a
+    // sensible default (today's or tomorrow's plan, whichever is found
+    // first) when the card is added via the UI picker.
     const match = Object.keys(hass.states).find((entityId) => {
-      if (!entityId.startsWith("sensor.") || !entityId.endsWith("_tagesplan")) {
+      if (!entityId.startsWith("sensor.")) {
         return false;
       }
       const attrs = hass.states[entityId]?.attributes as StundenplanEntityAttributes | undefined;
-      return Array.isArray(attrs?.stunden);
+      return Array.isArray(attrs?.lessons);
     });
     return {
       type: `custom:${CARD_TAG}`,
@@ -65,7 +67,7 @@ export class StundenplanCard extends LitElement {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    // The entity itself only updates once a day, but "past / current /
+    // The entity itself only updates hourly, but "past / current /
     // upcoming" needs to track the wall clock - so we force a re-render
     // every minute while the card is on screen.
     this._clockIntervalId = window.setInterval(() => this.requestUpdate(), 60_000);
@@ -109,7 +111,7 @@ export class StundenplanCard extends LitElement {
 
   private _lessons(): StundenplanLesson[] {
     const attrs = this._stateObj()?.attributes as StundenplanEntityAttributes | undefined;
-    return Array.isArray(attrs?.stunden) ? attrs!.stunden! : [];
+    return Array.isArray(attrs?.lessons) ? attrs!.lessons! : [];
   }
 
   protected render(): TemplateResult {
@@ -126,12 +128,12 @@ export class StundenplanCard extends LitElement {
     }
 
     const attrs = stateObj.attributes as StundenplanEntityAttributes;
-    const lessons = Array.isArray(attrs.stunden) ? attrs.stunden : [];
+    const lessons = Array.isArray(attrs.lessons) ? attrs.lessons : [];
     const title = this._config.title || attrs.friendly_name || "Stundenplan";
     const language = this.hass?.locale?.language ?? this.hass?.language ?? "en";
-    const dateLabel = formatLongDate(attrs.ziel_datum, language);
+    const dateLabel = formatLongDate(attrs.target_date, language);
     const isEmpty =
-      Boolean(attrs.kein_plan_gefunden) || Boolean(attrs.uebersprungen_grund) || lessons.length === 0;
+      Boolean(attrs.plan_not_found) || Boolean(attrs.skipped_reason) || lessons.length === 0;
 
     return html`
       <ha-card>
@@ -144,7 +146,7 @@ export class StundenplanCard extends LitElement {
             ${dateLabel ? html`<div class="subtitle">${dateLabel}</div>` : nothing}
           </div>
         </div>
-        ${isEmpty ? this._renderEmptyState() : this._renderTimeline(lessons, attrs.ziel_datum)}
+        ${isEmpty ? this._renderEmptyState() : this._renderTimeline(lessons, attrs.target_date)}
       </ha-card>
     `;
   }
@@ -159,8 +161,8 @@ export class StundenplanCard extends LitElement {
     `;
   }
 
-  private _renderTimeline(lessons: StundenplanLesson[], zielDatum?: string): TemplateResult {
-    const groups = groupLessonsByPeriod(lessons, zielDatum, new Date());
+  private _renderTimeline(lessons: StundenplanLesson[], targetDate?: string): TemplateResult {
+    const groups = groupLessonsByPeriod(lessons, targetDate, new Date());
     const compact = Boolean(this._config?.compact);
     return html`
       <div class="timeline ${compact ? "compact" : ""}">
@@ -176,7 +178,7 @@ export class StundenplanCard extends LitElement {
       .join(" ");
     return html`
       <div class=${rowClasses}>
-        <div class="time">${compact ? group.beginn : html`${group.beginn}<br />${group.ende}`}</div>
+        <div class="time">${compact ? group.start : html`${group.start}<br />${group.end}`}</div>
         <div class="dot-col"><span class="dot ${dotStatus}"></span></div>
         <div class="content">
           ${group.lessons.map((lesson) => this._renderLesson(lesson, compact))}
@@ -189,33 +191,33 @@ export class StundenplanCard extends LitElement {
   }
 
   private _groupDotStatus(lessons: StundenplanLesson[]): string {
-    if (lessons.some((lesson) => lesson.status === "entfaellt")) {
-      return "entfaellt";
+    if (lessons.some((lesson) => lesson.status === "cancelled")) {
+      return "cancelled";
     }
-    if (lessons.some((lesson) => lesson.status === "geaendert")) {
-      return "geaendert";
+    if (lessons.some((lesson) => lesson.status === "changed")) {
+      return "changed";
     }
-    return "regulaer";
+    return "regular";
   }
 
   private _renderLesson(lesson: StundenplanLesson, compact: boolean): TemplateResult {
-    const cancelled = lesson.status === "entfaellt";
-    const changed = lesson.status === "geaendert";
-    const meta = [lesson.lehrer, lesson.raum].filter(Boolean).join(" · ");
+    const cancelled = lesson.status === "cancelled";
+    const changed = lesson.status === "changed";
+    const meta = [lesson.teacher, lesson.room].filter(Boolean).join(" · ");
     return html`
       <div class="lesson">
         <div class="lesson-line">
-          ${lesson.kurs && !compact ? html`<span class="course-badge">${lesson.kurs}</span>` : nothing}
-          <span class="fach ${cancelled ? "cancelled" : ""}">${lesson.fach}</span>
+          ${lesson.course && !compact ? html`<span class="course-badge">${lesson.course}</span>` : nothing}
+          <span class="subject ${cancelled ? "cancelled" : ""}">${lesson.subject}</span>
           ${changed
-            ? html`<span class="badge warning">${localize(this.hass, "status.geaendert")}</span>`
+            ? html`<span class="badge warning">${localize(this.hass, "status.changed")}</span>`
             : nothing}
           ${cancelled
-            ? html`<span class="badge error">${localize(this.hass, "status.entfaellt")}</span>`
+            ? html`<span class="badge error">${localize(this.hass, "status.cancelled")}</span>`
             : nothing}
         </div>
         ${!compact && meta ? html`<div class="meta">${meta}</div>` : nothing}
-        ${lesson.hinweis ? html`<div class="hinweis">${lesson.hinweis}</div>` : nothing}
+        ${lesson.note ? html`<div class="note">${lesson.note}</div>` : nothing}
       </div>
     `;
   }
@@ -298,9 +300,9 @@ export class StundenplanCard extends LitElement {
       border-top-color: transparent;
     }
     .row.past .time,
-    .row.past .fach,
+    .row.past .subject,
     .row.past .meta,
-    .row.past .hinweis {
+    .row.past .note {
       color: var(--disabled-text-color);
     }
     .time {
@@ -328,10 +330,10 @@ export class StundenplanCard extends LitElement {
       width: 6px;
       height: 6px;
     }
-    .dot.geaendert {
+    .dot.changed {
       background-color: var(--warning-color);
     }
-    .dot.entfaellt {
+    .dot.cancelled {
       background-color: var(--error-color);
     }
     .content {
@@ -347,12 +349,12 @@ export class StundenplanCard extends LitElement {
       gap: 6px;
       flex-wrap: wrap;
     }
-    .fach {
+    .subject {
       font-size: 14px;
       font-weight: 500;
       color: var(--primary-text-color);
     }
-    .fach.cancelled {
+    .subject.cancelled {
       text-decoration: line-through;
       color: var(--disabled-text-color);
       font-weight: 400;
@@ -362,7 +364,7 @@ export class StundenplanCard extends LitElement {
       color: var(--secondary-text-color);
       margin-top: 1px;
     }
-    .hinweis {
+    .note {
       font-size: 12px;
       color: var(--disabled-text-color);
       font-style: italic;
@@ -412,7 +414,7 @@ window.customCards = window.customCards ?? [];
 window.customCards.push({
   type: CARD_TAG,
   name: "Stundenplan Card",
-  description: "Shows tomorrow's timetable and substitutions from the Stundenplan integration.",
+  description: "Shows one day's timetable and substitutions from the Stundenplan integration.",
   preview: true,
   documentationURL: "https://github.com/fion-private/ha-stundenplan-ui",
 });

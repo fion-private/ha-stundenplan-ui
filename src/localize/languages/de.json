@@ -1,11 +1,11 @@
 {
   "empty": {
-    "title": "Kein Plan für morgen",
+    "title": "Kein Plan verfügbar",
     "subtitle": "Wochenende, Ferien oder noch nicht veröffentlicht"
   },
   "status": {
-    "geaendert": "Geändert",
-    "entfaellt": "Entfällt"
+    "changed": "Geändert",
+    "cancelled": "Entfällt"
   },
   "now": "Jetzt",
   "editor": {

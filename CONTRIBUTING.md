@@ -69,13 +69,13 @@ component testing). Contributions adding these are very welcome.
 
 ## Relationship to the `stundenplan` integration
 
-This card is a pure frontend consumer of the `sensor.<class>_tagesplan`
-entity provided by the
+This card is a pure frontend consumer of the `sensor.<class>_day_plan_today`
+/ `_day_plan_tomorrow` entities provided by the
 [`stundenplan`](https://github.com/fion-private/ha-stundenplan) integration
-(`stunden`, `ziel_datum`, `kein_plan_gefunden`, `uebersprungen_grund`
-attributes - see that repo's README for the exact shape). If you're
-changing what data the card expects, please check whether the integration
-side needs a matching change first.
+(`lessons`, `target_date`, `plan_not_found`, `skipped_reason` attributes -
+see that repo's README for the exact shape). If you're changing what data
+the card expects, please check whether the integration side needs a
+matching change first.
 
 ## Submitting changes
 
