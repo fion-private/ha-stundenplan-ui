@@ -1,0 +1,35 @@
+{
+  "name": "ha-stundenplan-ui",
+  "version": "1.0.0",
+  "description": "Home Assistant Lovelace card for the Stundenplan integration",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fion-private/ha-stundenplan-ui"
+  },
+  "scripts": {
+    "build": "esbuild src/stundenplan-card.ts --bundle --format=esm --minify --sourcemap --outfile=dist/stundenplan-card.js",
+    "build:dev": "esbuild src/stundenplan-card.ts --bundle --format=esm --sourcemap --outfile=dist/stundenplan-card.js",
+    "watch": "npm run build:dev -- --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "format": "prettier --check \"src/**/*.{ts,json}\" \"tests/**/*.ts\"",
+    "format:fix": "prettier --write \"src/**/*.{ts,json}\" \"tests/**/*.ts\"",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "custom-card-helpers": "^1.9.0",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.9.0",
+    "eslint-plugin-lit": "^1.15.0",
+    "eslint-plugin-wc": "^2.2.0",
+    "lit": "^3.2.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "empty": {
+    "title": "Kein Plan für morgen",
+    "subtitle": "Wochenende, Ferien oder noch nicht veröffentlicht"
+  },
+  "status": {
+    "geaendert": "Geändert",
+    "entfaellt": "Entfällt"
+  },
+  "now": "Jetzt",
+  "editor": {
+    "entity": "Tagesplan-Entität",
+    "title": "Titel (optional)",
+    "compact": "Kompaktmodus"
+  },
+  "error": {
+    "entity_not_found": "Entität nicht gefunden: {entity}",
+    "no_entity": "Bitte eine Entität auswählen"
+  }
+}

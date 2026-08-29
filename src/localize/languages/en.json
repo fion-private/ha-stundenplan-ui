@@ -1,0 +1,20 @@
+{
+  "empty": {
+    "title": "No plan for tomorrow",
+    "subtitle": "Weekend, holidays, or not published yet"
+  },
+  "status": {
+    "geaendert": "Changed",
+    "entfaellt": "Cancelled"
+  },
+  "now": "Now",
+  "editor": {
+    "entity": "Day plan entity",
+    "title": "Title (optional)",
+    "compact": "Compact mode"
+  },
+  "error": {
+    "entity_not_found": "Entity not found: {entity}",
+    "no_entity": "Please select an entity"
+  }
+}
