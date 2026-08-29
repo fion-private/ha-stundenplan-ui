@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      # HACS (category "plugin") downloads the release asset matching
+      # hacs.json's "filename" field - it must be attached directly to the
+      # GitHub Release, not just committed to the repository.
+      - name: Attach dist/stundenplan-card.js to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/stundenplan-card.js
+          generate_release_notes: true

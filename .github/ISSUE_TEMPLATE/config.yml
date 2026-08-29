@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question / usage help
+    url: https://github.com/fion-private/ha-stundenplan-ui/discussions
+    about: Ask a question or get help using the card.
+  - name: Stundenplan integration (backend)
+    url: https://github.com/fion-private/ha-stundenplan
+    about: Issues about data fetching, the config flow, or entities belong in the integration repo.
