@@ -173,7 +173,11 @@ export class StundenplanCard extends LitElement {
 
   private _renderGroup(group: LessonGroup, compact: boolean): TemplateResult {
     const dotStatus = this._groupDotStatus(group.lessons);
-    const rowClasses = ["row", group.timing === "current" ? "current" : "", group.timing === "past" ? "past" : ""]
+    const rowClasses = [
+      "row",
+      group.timing === "current" ? "current" : "",
+      group.timing === "past" ? "past" : "",
+    ]
       .filter(Boolean)
       .join(" ");
     return html`
@@ -182,9 +186,11 @@ export class StundenplanCard extends LitElement {
         <div class="dot-col"><span class="dot ${dotStatus}"></span></div>
         <div class="content">
           ${group.lessons.map((lesson) => this._renderLesson(lesson, compact))}
-          ${group.timing === "current"
-            ? html`<span class="now-badge">${localize(this.hass, "now")}</span>`
-            : nothing}
+          ${
+            group.timing === "current"
+              ? html`<span class="now-badge">${localize(this.hass, "now")}</span>`
+              : nothing
+          }
         </div>
       </div>
     `;
@@ -209,12 +215,16 @@ export class StundenplanCard extends LitElement {
         <div class="lesson-line">
           ${lesson.course && !compact ? html`<span class="course-badge">${lesson.course}</span>` : nothing}
           <span class="subject ${cancelled ? "cancelled" : ""}">${lesson.subject}</span>
-          ${changed
-            ? html`<span class="badge warning">${localize(this.hass, "status.changed")}</span>`
-            : nothing}
-          ${cancelled
-            ? html`<span class="badge error">${localize(this.hass, "status.cancelled")}</span>`
-            : nothing}
+          ${
+            changed
+              ? html`<span class="badge warning">${localize(this.hass, "status.changed")}</span>`
+              : nothing
+          }
+          ${
+            cancelled
+              ? html`<span class="badge error">${localize(this.hass, "status.cancelled")}</span>`
+              : nothing
+          }
         </div>
         ${!compact && meta ? html`<div class="meta">${meta}</div>` : nothing}
         ${lesson.note ? html`<div class="note">${lesson.note}</div>` : nothing}
