@@ -210,10 +210,15 @@ export class StundenplanCard extends LitElement {
     const cancelled = lesson.status === "cancelled";
     const changed = lesson.status === "changed";
     const meta = [lesson.teacher, lesson.room].filter(Boolean).join(" · ");
+    // The course badge only adds information when the course code differs
+    // from the subject (e.g. split groups like "WPK1"/"WPK2" for subject
+    // "WPK"). When they're identical (the common case), showing both would
+    // just be visual noise.
+    const showCourseBadge = Boolean(lesson.course) && lesson.course !== lesson.subject && !compact;
     return html`
       <div class="lesson">
         <div class="lesson-line">
-          ${lesson.course && !compact ? html`<span class="course-badge">${lesson.course}</span>` : nothing}
+          ${showCourseBadge ? html`<span class="course-badge">${lesson.course}</span>` : nothing}
           <span class="subject ${cancelled ? "cancelled" : ""}">${lesson.subject}</span>
           ${
             changed
