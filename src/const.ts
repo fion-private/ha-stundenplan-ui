@@ -1,4 +1,4 @@
-export const CARD_VERSION = "2.0.0";
+export const CARD_VERSION = "2.1.0";
 export const CARD_TAG = "stundenplan-card";
 export const EDITOR_TAG = "stundenplan-card-editor";
 
